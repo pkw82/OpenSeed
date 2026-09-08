@@ -1,0 +1,28 @@
+[package]
+name = "openseed"
+version = "0.1.0"
+edition = "2021"
+description = "Minimal offline BIP-39 mnemonic generator"
+license = "MIT"
+
+[dependencies]
+bip39 = { version = "2.2", default-features = false, features = ["std"] }
+libc = "0.2"
+getrandom = "0.3"
+sha2 = "0.10"
+slint = { version = "1.17", default-features = false, features = [
+    "std",
+    "compat-1-2",
+    "backend-winit",
+    "renderer-software",
+    "software-renderer-systemfonts",
+] }
+
+[dev-dependencies]
+[build-dependencies]
+slint-build = "1.17"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1

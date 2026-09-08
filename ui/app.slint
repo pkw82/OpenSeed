@@ -1,0 +1,844 @@
+import { Button, CheckBox, GridBox, LineEdit, ProgressIndicator, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+component DiceButton {
+    in property <string> label;
+    callback clicked;
+    width: 48px;
+    height: 42px;
+
+    Rectangle {
+        background: #e3e7ec;
+        border-width: 1px;
+        border-color: #7b8794;
+
+        Text {
+            text: root.label;
+            color: #17202a;
+            font-size: 17px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        TouchArea {
+            clicked => { root.clicked(); }
+        }
+    }
+}
+
+component SupportButton {
+    in property <string> label: "SUPPORT OPENSEED";
+    in property <color> text-color: #17202a;
+    callback clicked;
+    width: 220px;
+    height: 40px;
+
+    Rectangle {
+        background: #e3e7ec;
+        border-width: 1px;
+        border-color: #7b8794;
+
+        Text {
+            text: root.label;
+            color: root.text-color;
+            font-size: 13px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        TouchArea {
+            clicked => { root.clicked(); }
+        }
+    }
+}
+
+component VerificationField {
+    in-out property <string> word;
+    callback edited(string);
+    width: 120px;
+    height: 48px;
+
+    Rectangle {
+        background: #ffffff;
+        border-width: 1px;
+        border-color: #d9dde3;
+
+        LineEdit {
+            text <=> root.word;
+            placeholder-text: "word";
+            horizontal-alignment: center;
+            font-size: 13px;
+            x: 6px;
+            y: 4px;
+            width: parent.width - 12px;
+            height: parent.height - 8px;
+            edited(text) => { root.edited(text); }
+        }
+    }
+}
+
+component CopyButton {
+    callback clicked;
+    width: 64px;
+    height: 40px;
+
+    Rectangle {
+        background: #e3e7ec;
+        border-width: 1px;
+        border-color: #7b8794;
+
+        Text {
+            text: "COPY";
+            color: #17202a;
+            font-size: 11px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        TouchArea { clicked => { root.clicked(); } }
+    }
+}
+
+component AddressField {
+    in property <string> address;
+    horizontal-stretch: 1;
+    height: 40px;
+
+    Rectangle {
+        background: #263238;
+        border-width: 1px;
+        border-color: #546e7a;
+
+        address-input := TextInput {
+            text: root.address;
+            color: #ffffff;
+            selection-foreground-color: #17202a;
+            selection-background-color: #90caf9;
+            font-size: 12px;
+            horizontal-alignment: left;
+            vertical-alignment: center;
+            read-only: true;
+            single-line: true;
+            x: 10px;
+            width: parent.width - 20px;
+            height: 100%;
+        }
+    }
+
+    CopyButton {
+        x: parent.width - self.width;
+        clicked => { address-input.select-all(); address-input.copy(); }
+    }
+}
+
+component SupportDetails {
+    in property <bool> show-donation;
+    in property <bool> show-about;
+
+    if root.show-donation: Rectangle {
+        background: #ffffff;
+        border-width: 1px;
+        border-color: #d9dde3;
+        min-height: 170px;
+
+        VerticalBox {
+            padding: 14px;
+            spacing: 6px;
+
+            Text {
+                text: "OpenSeed is free. Donations are voluntary.";
+                color: #17202a;
+                font-size: 13px;
+                horizontal-alignment: center;
+            }
+
+            HorizontalBox {
+                spacing: 6px;
+                vertical-stretch: 0;
+                Text {
+                    text: "Bitcoin (wpłata w BTC)";
+                    color: #17202a;
+                    font-size: 11px;
+                    vertical-alignment: top;
+                }
+                AddressField {
+                    address: "bc1qwqeegd32w5wrgwx05t6ag6902egrmr7j22hku8";
+                }
+            }
+
+            HorizontalBox {
+                spacing: 6px;
+                vertical-stretch: 0;
+                Text {
+                    text: "Lightning (wpłata w satoshi)";
+                    color: #17202a;
+                    font-size: 11px;
+                    vertical-alignment: top;
+                }
+                AddressField {
+                    address: "burlyfoxglove7800@cake.cash";
+                }
+            }
+
+            Text {
+                text: "Addresses are static. Nothing is copied, sent, or tracked unless you click COPY.";
+                color: #56616f;
+                font-size: 11px;
+                horizontal-alignment: center;
+            }
+        }
+    }
+
+    if root.show-about: Rectangle {
+        background: #ffffff;
+        border-width: 1px;
+        border-color: #d9dde3;
+        min-height: 130px;
+
+        VerticalBox {
+            padding: 14px;
+            spacing: 6px;
+
+            Text {
+                text: "OpenSeed v0.1.0";
+                color: #17202a;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: "OpenSeed generates 24-word English BIP-39 mnemonics using selected local entropy sources. It performs no network communication and does not save or log the mnemonic.";
+                color: #56616f;
+                font-size: 12px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+        }
+    }
+}
+
+export component OpenSeedWindow inherits Window {
+    title: "OpenSeed";
+    preferred-width: 880px;
+    preferred-height: 1040px;
+    min-width: 840px;
+    min-height: 900px;
+    background: #f6f7f9;
+
+    in property <bool> has-mnemonic: false;
+    in-out property <bool> use-system-rng: true;
+    in-out property <bool> use-movement: true;
+    in-out property <bool> use-dice: true;
+    in-out property <int> movement-sample-count: 0;
+    in-out property <int> dice-roll-count: 0;
+    in-out property <int> dice-accepted-blocks: 0;
+    in-out property <bool> show-donation: false;
+    in-out property <bool> show-about: false;
+    in-out property <bool> show-passphrase-info: false;
+    in-out property <bool> verification-mode: false;
+    in-out property <bool> verification-valid: false;
+    in-out property <string> verification-status: "";
+    in-out property <[string]> verification-words: [];
+    in property <string> network-status: "CHECKING...";
+    in property <bool> network-online: false;
+    in property <string> movement-status: "Distinct movement samples: 0 (minimum 1024)";
+    in property <string> dice-status: "Rolls recorded: 0   Accepted blocks: 0 / 13";
+    in property <[string]> mnemonic-words: [];
+    in property <string> error-text: "";
+
+    callback generate-requested();
+    callback close-requested();
+    callback pointer-moved(float, float);
+    callback reset-movement-requested();
+    callback dice-roll(int);
+    callback reset-dice-requested();
+    callback start-over-requested();
+    callback refresh-network-status();
+    callback verify-mnemonic-requested();
+    callback verification-word-edited(int, string);
+    callback back-to-start-requested();
+    callback open-verification-requested();
+
+    VerticalBox {
+        padding: 32px;
+        spacing: 16px;
+
+        Text {
+            text: "OPENSEED";
+            color: #17202a;
+            font-size: 30px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            height: 38px;
+        }
+
+        Text {
+            text: "OFFLINE BIP-39 MNEMONIC GENERATOR";
+            color: #56616f;
+            font-size: 15px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            wrap: no-wrap;
+            height: 24px;
+        }
+
+        Rectangle {
+            height: 1px;
+            background: #d9dde3;
+        }
+
+        if !root.has-mnemonic && !root.verification-mode: HorizontalBox {
+            spacing: 16px;
+            vertical-stretch: 0;
+
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #d9dde3;
+
+                VerticalBox {
+                    padding: 12px;
+                    spacing: 8px;
+
+                    Text {
+                        text: "WARNING";
+                        color: #b42318;
+                        font-size: 14px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: "This mnemonic is an extremely sensitive secret.\nIt will not be saved, logged, copied, or transmitted.\nDo not take a screenshot or photograph the screen.";
+                        color: #5b2521;
+                        font-size: 14px;
+                        horizontal-alignment: center;
+                        wrap: word-wrap;
+                        vertical-stretch: 0;
+                    }
+                }
+            }
+
+            Rectangle {
+                horizontal-stretch: 1;
+                background: #ffffff;
+                border-width: 1px;
+                border-color: #d9dde3;
+
+                VerticalBox {
+                    padding: 12px;
+                    spacing: 6px;
+
+                    Text {
+                        text: "NETWORK STATUS";
+                        color: #17202a;
+                        font-size: 14px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                    }
+
+                    Text {
+                        text: root.network-status;
+                        color: root.network-online ? #b42318 : #216e39;
+                        font-size: 15px;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: "Recommended: disconnect from the Internet before generating. This status is informational only.";
+                        color: #56616f;
+                        font-size: 11px;
+                        horizontal-alignment: center;
+                        wrap: word-wrap;
+                        vertical-stretch: 0;
+                    }
+
+                    Button {
+                        text: "REFRESH STATUS";
+                        clicked => { root.refresh-network-status(); }
+                    }
+                }
+            }
+        }
+
+        if !root.has-mnemonic && !root.verification-mode: VerticalBox {
+            spacing: 6px;
+
+            Text {
+                text: "ENTROPY SOURCES";
+                color: #17202a;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            CheckBox {
+                text: "SYSTEM SECURE RANDOM GENERATOR";
+                checked <=> root.use-system-rng;
+            }
+
+            Text {
+                text: "Recommended. Uses the operating system's cryptographically secure random source.";
+                color: #56616f;
+                font-size: 12px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            CheckBox {
+                text: "MOUSE / TOUCHPAD MOVEMENT";
+                checked <=> root.use-movement;
+            }
+
+            Text {
+                text: "Optional experimental input. Movement is collected, but its entropy cannot be measured reliably in bits.";
+                color: #56616f;
+                font-size: 12px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            CheckBox {
+                text: "PHYSICAL SIX-SIDED DICE";
+                checked <=> root.use-dice;
+            }
+
+            Text {
+                text: "Optional. Click the result of each physical die roll; biased ranges are rejected automatically.";
+                color: #56616f;
+                font-size: 12px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            if root.use-movement: Rectangle {
+                min-height: 110px;
+                background: root.movement-sample-count > 0 ? #eef8f0 : #ffffff;
+                border-width: 1px;
+                border-color: #d9dde3;
+
+                TouchArea {
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.move) {
+                            root.pointer-moved(self.mouse-x / 1px, self.mouse-y / 1px);
+                        }
+                    }
+                }
+
+                Text {
+                    text: root.movement-sample-count > 0
+                        ? "Movement detected — keep moving the pointer"
+                        : "Move the pointer here to collect distinct samples";
+                    color: root.movement-sample-count > 0 ? #216e39 : #56616f;
+                    font-size: 14px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            if root.use-movement: Text {
+                text: root.movement-status;
+                color: #56616f;
+                font-size: 13px;
+                horizontal-alignment: center;
+            }
+
+            if root.use-movement: ProgressIndicator {
+                progress: min(1.0, root.movement-sample-count / 1024.0);
+                indeterminate: false;
+            }
+
+            if root.use-movement: Text {
+                text: root.movement-sample-count >= 1024
+                    ? "Ready: the technical collection threshold is reached."
+                    : "Collection progress only — this is not a measurement of entropy bits.";
+                color: root.movement-sample-count >= 1024 ? #216e39 : #56616f;
+                font-size: 12px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+
+            if root.use-movement: HorizontalBox {
+                alignment: center;
+
+                Button {
+                    text: "RESET MOVEMENT";
+                    clicked => { root.reset-movement-requested(); }
+                }
+            }
+
+            if root.use-dice: VerticalBox {
+                spacing: 4px;
+
+                Text {
+                    text: "DICE INPUT — click the result of each physical roll";
+                    color: #17202a;
+                    font-size: 13px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+
+                HorizontalBox {
+                    alignment: center;
+                    spacing: 6px;
+
+                    DiceButton { label: "1"; clicked => { root.use-dice = true; root.dice-roll(1); } }
+                    DiceButton { label: "2"; clicked => { root.use-dice = true; root.dice-roll(2); } }
+                    DiceButton { label: "3"; clicked => { root.use-dice = true; root.dice-roll(3); } }
+                    DiceButton { label: "4"; clicked => { root.use-dice = true; root.dice-roll(4); } }
+                    DiceButton { label: "5"; clicked => { root.use-dice = true; root.dice-roll(5); } }
+                    DiceButton { label: "6"; clicked => { root.use-dice = true; root.dice-roll(6); } }
+                }
+
+                Text {
+                    text: root.dice-status;
+                    color: #56616f;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "Each accepted block uses 8 rolls. Rejected blocks must be rolled again.";
+                    color: #56616f;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                }
+
+                HorizontalBox {
+                    alignment: center;
+
+                    Button {
+                        text: "RESET DICE";
+                        clicked => { root.reset-dice-requested(); }
+                    }
+                }
+            }
+        }
+
+        if root.error-text != "": Text {
+            text: root.error-text;
+            color: #b42318;
+            font-size: 14px;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+            vertical-stretch: 0;
+        }
+
+        if !root.has-mnemonic && !root.verification-mode: HorizontalBox {
+            alignment: center;
+            vertical-stretch: 0;
+
+            Button {
+                text: "GENERATE MNEMONIC";
+                primary: true;
+                min-width: 220px;
+                height: 44px;
+                clicked => { root.generate-requested(); }
+            }
+        }
+
+        if !root.has-mnemonic && !root.verification-mode: HorizontalBox {
+            alignment: space-between;
+            vertical-stretch: 0;
+
+            SupportButton {
+                clicked => {
+                    root.show-donation = !root.show-donation;
+                    if (root.show-donation) {
+                        root.show-about = false;
+                        root.show-passphrase-info = false;
+                    }
+                }
+            }
+
+            SupportButton {
+                label: "VERSION / ABOUT";
+                clicked => {
+                    root.show-about = !root.show-about;
+                    if (root.show-about) {
+                        root.show-donation = false;
+                        root.show-passphrase-info = false;
+                    }
+                }
+            }
+        }
+
+        if !root.has-mnemonic && !root.verification-mode: HorizontalBox {
+            alignment: center;
+            vertical-stretch: 0;
+
+            Button {
+                text: "VERIFY MNEMONIC";
+                min-width: 220px;
+                height: 40px;
+                clicked => { root.open-verification-requested(); }
+            }
+        }
+
+        if root.verification-mode: VerticalBox {
+            spacing: 10px;
+            vertical-stretch: 1;
+
+            Text {
+                text: "VERIFY EXISTING MNEMONIC";
+                color: #17202a;
+                font-size: 18px;
+                font-weight: 700;
+                horizontal-alignment: center;
+            }
+
+            Text {
+                text: "Enter the 24 words from your handwritten backup. OpenSeed checks the official English BIP-39 word list and checksum locally; the entered words are not saved, logged, copied, or transmitted.";
+                color: #56616f;
+                font-size: 13px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+
+            GridBox {
+                spacing: 8px;
+                padding: 4px;
+                height: 240px;
+                vertical-stretch: 0;
+
+                for word[index] in root.verification-words: VerificationField {
+                    col: Math.mod(index, 6);
+                    row: index / 6;
+                    word: word;
+                    edited(text) => { root.verification-word-edited(index, text); }
+                }
+            }
+
+            Text {
+                text: root.verification-status;
+                color: root.verification-valid ? #216e39 : #b42318;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+
+            HorizontalBox {
+                alignment: center;
+                vertical-stretch: 0;
+                spacing: 10px;
+
+                Button {
+                    text: "CHECK MNEMONIC";
+                    primary: true;
+                    min-width: 180px;
+                    height: 40px;
+                    clicked => { root.verify-mnemonic-requested(); }
+                }
+
+                Button {
+                    text: "BACK";
+                    min-width: 120px;
+                    height: 40px;
+                    clicked => { root.back-to-start-requested(); }
+                }
+            }
+        }
+
+        if root.has-mnemonic: VerticalBox {
+            spacing: 10px;
+            vertical-stretch: 1;
+
+            Text {
+                text: "Write these 24 words down and store the backup securely.";
+                color: #17202a;
+                font-size: 15px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+
+            Text {
+                text: "WARNING: After this program is closed, these words will be lost forever and cannot be recovered.";
+                color: #b42318;
+                font-size: 14px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+
+            HorizontalBox {
+                alignment: center;
+                vertical-stretch: 0;
+
+                SupportButton {
+                    label: "PASSPHRASE INFO";
+                    text-color: #b42318;
+                    clicked => {
+                        root.show-passphrase-info = !root.show-passphrase-info;
+                        if (root.show-passphrase-info) {
+                            root.show-donation = false;
+                            root.show-about = false;
+                        }
+                    }
+                }
+            }
+
+            GridBox {
+                spacing: 8px;
+                padding: 4px;
+                height: 240px;
+                vertical-stretch: 0;
+
+                for word[index] in root.mnemonic-words: Rectangle {
+                    col: Math.mod(index, 6);
+                    row: index / 6;
+                    min-width: 120px;
+                    min-height: 48px;
+                    background: #ffffff;
+                    border-width: 1px;
+                    border-color: #d9dde3;
+
+                    Text {
+                        text: word;
+                        color: #17202a;
+                        font-size: 14px;
+                        wrap: no-wrap;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+            }
+
+            Text {
+                text: "Independently verify your written backup before closing.";
+                color: #56616f;
+                font-size: 14px;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+                vertical-stretch: 0;
+            }
+        }
+
+        if root.has-mnemonic: HorizontalBox {
+            alignment: space-between;
+            vertical-stretch: 0;
+
+            SupportButton {
+                clicked => {
+                    root.show-donation = !root.show-donation;
+                    if (root.show-donation) {
+                        root.show-about = false;
+                        root.show-passphrase-info = false;
+                    }
+                }
+            }
+
+            SupportButton {
+                label: "START OVER";
+                clicked => { root.start-over-requested(); }
+            }
+
+            SupportButton {
+                label: "VERSION / ABOUT";
+                clicked => {
+                    root.show-about = !root.show-about;
+                    if (root.show-about) {
+                        root.show-donation = false;
+                        root.show-passphrase-info = false;
+                    }
+                }
+            }
+        }
+
+        if root.has-mnemonic && root.show-passphrase-info: Rectangle {
+            background: #ffffff;
+            border-width: 1px;
+            border-color: #d9dde3;
+            min-height: 230px;
+
+            VerticalBox {
+                padding: 14px;
+                spacing: 7px;
+
+                Text {
+                    text: "PASSPHRASE AND HIDDEN WALLETS";
+                    color: #17202a;
+                    font-size: 14px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+
+                Text {
+                    text: "Your 24 words alone restore one wallet. The same 24 words combined with a passphrase restore a different wallet.";
+                    color: #17202a;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                    vertical-stretch: 0;
+                }
+
+                Text {
+                    text: "A passphrase can protect your written backup: someone who finds the 24 words still cannot open the protected wallet without the exact passphrase.";
+                    color: #56616f;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                    vertical-stretch: 0;
+                }
+
+                Text {
+                    text: "Important: a passphrase is not a 25th BIP-39 word. It may be any text and must be backed up separately. A forgotten or mistyped passphrase creates a different wallet and can permanently prevent recovery.";
+                    color: #b42318;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                    vertical-stretch: 0;
+                }
+
+                Text {
+                    text: "Use this feature only if you understand the responsibility. OpenSeed does not collect or save your passphrase. Enter it directly into a compatible wallet or hardware device.";
+                    color: #56616f;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    wrap: word-wrap;
+                    vertical-stretch: 0;
+                }
+            }
+        }
+
+        SupportDetails {
+            show-donation: root.show-donation;
+            show-about: root.show-about;
+        }
+
+        HorizontalBox {
+            alignment: center;
+            vertical-stretch: 0;
+
+            Button {
+                text: "CLOSE";
+                horizontal-stretch: 0;
+                min-width: 120px;
+                height: 40px;
+                clicked => { root.close-requested(); }
+            }
+        }
+    }
+}

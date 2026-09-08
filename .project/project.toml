@@ -1,0 +1,31 @@
+name = "OpenSeed"
+version = "0.1"
+language = "rust"
+
+project_type = "security_critical"
+status = "development"
+
+main_branch = "main"
+
+[agent]
+main = true
+security_review = true
+testing = true
+code_review = true
+
+[development]
+minimal_dependencies = true
+avoid_speculative_features = true
+run_tests_after_changes = true
+inspect_git_diff_after_changes = true
+
+[security]
+network_access = false
+telemetry = false
+analytics = false
+secret_persistence = false
+clipboard = false
+
+[testing]
+required = true
+run_before_completion = true
