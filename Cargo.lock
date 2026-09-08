@@ -3208,7 +3208,7 @@ name = "openseed"
 version = "0.1.0"
 dependencies = [
  "bip39",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "libc",
  "sha2",
  "slint",
