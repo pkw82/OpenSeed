@@ -6,7 +6,7 @@ description = "Minimal offline BIP-39 mnemonic generator"
 license = "MIT"
 
 [dependencies]
-bip39 = { version = "2.2", default-features = false, features = ["std"] }
+bip39 = { version = "3.0", default-features = false, features = ["std"] }
 libc = "0.2"
 getrandom = "0.3"
 sha2 = "0.10"
